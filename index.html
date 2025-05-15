@@ -32,6 +32,17 @@
             border-bottom: 4px ridge #ccc;
         }
 
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
         .arrow {
             background: #ddd;
             border: 2px outset #ccc;
@@ -317,6 +328,7 @@
         <div class="nav-arrows">
             <button class="arrow prev">←</button>
             <div class="meta-info">Day <span id="current-day">1</span> | <span id="current-date">Date</span></div>
+            <div class="title">Jack Blasko</div>
             <button class="arrow next">→</button>
         </div>
         <div class="detail-view">
