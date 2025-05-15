@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>365-Day T-Shirt Project</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            background: #f0f0f0;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        .retro-container {
+            background: linear-gradient(to bottom, #e0e0e0, #c0c0c0);
+            border: 8px ridge #ccc;
+            min-height: 100vh;
+            height: 100vh; /* Force container to be exactly viewport height */
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box; /* Include border in height calculation */
+            overflow: hidden; /* Prevent container overflow */
+        }
+
+        .nav-arrows {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: #d0d0d0;
+            border-bottom: 4px ridge #ccc;
+        }
+
+        .arrow {
+            background: #ddd;
+            border: 2px outset #ccc;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-family: 'Courier New', monospace;
+        }
+
+        .arrow:hover {
+            background: #ccc;
+        }
+
+        .arrow:active {
+            border-style: inset;
+        }
+
+        .detail-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        .meta-info {
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .shirt-detail {
+            height: 300px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin-bottom: 20px;
+        }
+
+        /* Media query for mobile devices */
+        @media (max-width: 768px) {
+            .retro-container {
+                height: auto; /* Allow container to expand on mobile */
+                min-height: 100vh;
+                overflow-y: auto; /* Enable vertical scrolling on mobile */
+            }
+            
+            .shirt-detail {
+                height: 50vh; /* Use viewport-relative height */
+                min-height: 400px; /* Minimum height */
+                max-height: 500px; /* Maximum height */
+            }
+            
+            /* Adjust layout for better mobile viewing */
+            .detail-view {
+                padding: 10px;
+                overflow: visible; /* Allow content to flow */
+            }
+            
+            .diary-entry {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+        }
+
+        .diary-entry {
+            padding: 15px;
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+            overflow-y: auto;
+            /* Remove flexible height */
+            height: 160px; /* Set fixed height to 160px */
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative; /* For scroll indicators */
+        }
+
+        .diary-text {
+            max-width: 100%;
+            max-height: 100%;
+            overflow: auto;
+            /* Set consistent font size for both mobile and desktop */
+            font-size: 18px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        /* Scroll indicators */
+        .scroll-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #d0d0d0;
+            border: 1px outset #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .scroll-indicator:active {
+            border-style: inset;
+        }
+
+        .scroll-down {
+            bottom: 5px;
+            left: 5px;
+        }
+
+        .scroll-up {
+            top: 5px;
+            left: 5px;
+        }
+
+        .scroll-indicator.visible {
+            opacity: 0.8;
+        }
+
+        .rack-container {
+            overflow-x: auto;
+            overflow-y: hidden;
+            width: 100%;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            background: #e8e8e8;
+            border-top: 4px ridge #ccc;
+            border-bottom: 4px ridge #ccc;
+        }
+
+        .shirt-rack {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            min-height: 180px;
+        }
+
+        .shirt-item {
+            flex: 0 0 120px;
+            height: 160px;
+            background: #f8f8f8;
+            border: 2px solid #000;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .shirt-item:hover, .shirt-item:active {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .shirt-day {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 5px;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
+        .links-container {
+            padding: 10px 5px;
+            background: linear-gradient(to bottom, #d8d8d8, #c0c0c0);
+            text-align: center;
+            max-height: 120px; /* Reduced for better proportion */
+            overflow-y: auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain; /* Prevent scroll chaining */
+            touch-action: auto; /* Allow all scrolling types */
+            position: relative;
+            z-index: 10;
+            border-top: 3px ridge #ccc;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .links-container a {
+            display: inline-flex;
+            margin: 2px;
+            padding: 0;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+            font-weight: bold;
+            position: relative;
+            width: 34px;
+            height: 40px;
+            background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+            border: 1px solid #999;
+            /* T-shirt shape with wider, more angled sleeves */
+            clip-path: polygon(
+                20% 0%,   /* Top left shoulder */
+                80% 0%,   /* Top right shoulder */
+                95% 20%,  /* Right sleeve tip */
+                88% 38%,  /* Right sleeve bottom */
+                80% 32%,  /* Right armpit */
+                80% 100%, /* Bottom right */
+                20% 100%, /* Bottom left */
+                20% 32%,  /* Left armpit */
+                12% 38%,  /* Left sleeve bottom */
+                5% 20%    /* Left sleeve tip */
+            );
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            flex: 0 0 auto;
+        }
+
+        .links-container a::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(255,255,255,0.3) 0%, 
+                rgba(255,255,255,0.1) 50%, 
+                rgba(0,0,0,0.05) 100%);
+            pointer-events: none;
+        }
+
+        .links-container a:hover {
+            background: linear-gradient(to bottom, #e5e5e5, #d0d0d0);
+            transform: scale(1.05);
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 3;
+        }
+
+        .links-container a.active {
+            background: linear-gradient(to bottom, #7aa5da, #5a85ba);
+            color: white;
+            border-color: #4a75aa;
+            z-index: 2;
+            font-weight: bold;
+            box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* CRT scanline effect */
+        .retro-container::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03),
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="retro-container">
+        <div class="nav-arrows">
+            <button class="arrow prev">←</button>
+            <div class="meta-info">Day <span id="current-day">1</span> | <span id="current-date">Date</span></div>
+            <button class="arrow next">→</button>
+        </div>
+        <div class="detail-view">
+            <div class="shirt-detail"></div>
+            <div class="diary-entry">
+                <div class="diary-text"></div>
+            </div>
+        </div>
+        <div class="rack-container">
+            <div class="shirt-rack">
+                <!-- Shirt elements will be injected here -->
+            </div>
+        </div>
+        <div class="links-container" id="links-container">
+            <!-- Shirt links will be added here -->
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        const shirtRack = document.querySelector('.shirt-rack');
+        const detailView = document.querySelector('.detail-view');
+        const shirtDetail = document.querySelector('.shirt-detail');
+        const diaryEntry = document.querySelector('.diary-entry');
+        const diaryText = document.querySelector('.diary-text');
+        const prevBtn = document.querySelector('.prev');
+        const nextBtn = document.querySelector('.next');
+        const currentDayEl = document.getElementById('current-day');
+        const currentDateEl = document.getElementById('current-date');
+        const linksContainer = document.getElementById('links-container');
+
+        let currentIndex = 0;
+        let shirtData = []; // Will be loaded from JSON
+        let visibleItems = []; // Track currently visible shirts for lazy loading
+        let scrollPosition = {
+            detail: 0,      // Scroll position of detail view
+            page: 0,        // Scroll position of page
+            rack: 0,        // Scroll position of shirt rack
+            links: 0        // Scroll position of links container
+        };
+        
+        // Placeholder image for shirts that haven't loaded yet
+        const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+        // Save current scroll positions
+        function saveScrollPositions() {
+            scrollPosition.detail = diaryText.scrollTop;
+            scrollPosition.page = window.scrollY;
+            scrollPosition.rack = document.querySelector('.rack-container').scrollLeft;
+            scrollPosition.links = linksContainer.scrollLeft;
+        }
+
+        // Restore saved scroll positions
+        function restoreScrollPositions() {
+            // Use setTimeout to ensure DOM is updated
+            setTimeout(() => {
+                diaryText.scrollTop = scrollPosition.detail;
+                document.querySelector('.rack-container').scrollLeft = scrollPosition.rack;
+                linksContainer.scrollLeft = scrollPosition.links;
+                
+                // Only restore page scroll if not at the top
+                if (scrollPosition.page > 0) {
+                    window.scrollTo(0, scrollPosition.page);
+                }
+            }, 0);
+        }
+
+        // Load data
+        async function init() {
+            try {
+                const response = await fetch('data/shirt-data.json');
+                shirtData = await response.json();
+                generateShirtLinks();
+                renderInitialItems(0); // Start with first batch
+                setupIntersectionObserver();
+                showShirtDetails(0); // Show first shirt by default
+                
+                // Set up scroll tracking
+                diaryText.addEventListener('scroll', () => {
+                    scrollPosition.detail = diaryText.scrollTop;
+                });
+                
+                document.querySelector('.rack-container').addEventListener('scroll', () => {
+                    scrollPosition.rack = document.querySelector('.rack-container').scrollLeft;
+                });
+                
+                linksContainer.addEventListener('scroll', () => {
+                    scrollPosition.links = linksContainer.scrollLeft;
+                });
+                
+                window.addEventListener('scroll', () => {
+                    scrollPosition.page = window.scrollY;
+                });
+
+                // Prevent touch events on the links container from propagating to the page
+                linksContainer.addEventListener('touchmove', (e) => {
+                    // Allow the event to continue only within the container
+                    if (e.target.closest('.links-container')) {
+                        e.stopPropagation();
+                    }
+                }, { passive: false });
+                
+                linksContainer.addEventListener('wheel', (e) => {
+                    // Check if container needs scrolling
+                    const container = linksContainer;
+                    const isScrollable = container.scrollHeight > container.clientHeight;
+                    
+                    if (isScrollable) {
+                        const scrollTop = container.scrollTop;
+                        const maxScrollTop = container.scrollHeight - container.clientHeight;
+                        
+                        // If we're at the top and trying to scroll up or
+                        // at the bottom and trying to scroll down, don't prevent default
+                        if ((scrollTop <= 0 && e.deltaY < 0) || 
+                            (scrollTop >= maxScrollTop && e.deltaY > 0)) {
+                            return; // Let the page scroll
+                        }
+                        
+                        // Otherwise prevent default and handle the scroll in the container
+                        e.preventDefault();
+                        container.scrollTop += e.deltaY;
+                    }
+                }, { passive: false });
+                
+            } catch (error) {
+                console.error('Error loading shirt data:', error);
+                diaryText.textContent = 'Error loading shirt data. Please try refreshing the page.';
+            }
+        }
+
+        // Generate links to all shirts
+        function generateShirtLinks() {
+            const fragment = document.createDocumentFragment();
+            
+            shirtData.forEach((shirt, index) => {
+                const link = document.createElement('a');
+                link.href = '#';
+                link.textContent = shirt.day;
+                link.dataset.index = index;
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Stop event propagation
+                    showShirtDetails(index);
+                    return false; // Prevent default behavior
+                });
+                fragment.appendChild(link);
+            });
+            
+            linksContainer.appendChild(fragment);
+        }
+
+        // Update active link
+        function updateActiveLink(index) {
+            const links = linksContainer.querySelectorAll('a');
+            links.forEach(link => link.classList.remove('active'));
+            
+            const activeLink = linksContainer.querySelector(`a[data-index="${index}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+                
+                // Only scroll the links container itself, not the page
+                const linkRect = activeLink.getBoundingClientRect();
+                const containerRect = linksContainer.getBoundingClientRect();
+                
+                if (linkRect.left < containerRect.left || linkRect.right > containerRect.right) {
+                    linksContainer.scrollLeft += (linkRect.left - containerRect.left) - (containerRect.width / 2) + (linkRect.width / 2);
+                }
+            }
+        }
+
+        // Get the batch range based on current index
+        function getBatchRange(index) {
+            const batchSize = 50;
+            const batchNumber = Math.floor(index / batchSize);
+            const start = batchNumber * batchSize;
+            const end = Math.min(start + batchSize, shirtData.length);
+            return { start, end };
+        }
+
+        // Render shirt items for the current batch
+        function renderInitialItems(index) {
+            // Clear existing shirts
+            shirtRack.innerHTML = '';
+            
+            const { start, end } = getBatchRange(index);
+            const fragment = document.createDocumentFragment();
+            
+            for (let i = start; i < end; i++) {
+                const shirt = createShirtElement(i);
+                fragment.appendChild(shirt);
+            }
+            
+            shirtRack.appendChild(fragment);
+            setupIntersectionObserver();
+        }
+
+        // Create individual shirt element
+        function createShirtElement(index) {
+            const data = shirtData[index];
+            const shirt = document.createElement('div');
+            shirt.className = 'shirt-item';
+            shirt.dataset.index = index;
+            
+            // Add day number to shirt
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'shirt-day';
+            dayLabel.textContent = `Day ${data.day}`;
+            shirt.appendChild(dayLabel);
+            
+            // Use placeholder initially
+            shirt.style.backgroundImage = `url('${placeholderImage}')`;
+            shirt.addEventListener('click', () => showShirtDetails(index));
+            
+            return shirt;
+        }
+
+        // Lazy loading with Intersection Observer
+        function setupIntersectionObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const index = parseInt(entry.target.dataset.index);
+                        loadShirtImage(entry.target, index);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.shirt-item').forEach(item => {
+                observer.observe(item);
+            });
+        }
+
+        // Get the correct shirt image path with proper formatting
+        function getShirtImagePath(index) {
+            const dayNumber = shirtData[index].day;
+            // Format day number with leading zeros (001, 002, etc.)
+            const formattedDay = String(dayNumber).padStart(3, '0');
+            return `textures/ALLTHESHIRTS/Shirt_${formattedDay}.png`;
+        }
+
+        // Load actual shirt image
+        function loadShirtImage(element, index) {
+            const img = new Image();
+            img.src = getShirtImagePath(index);
+            
+            // Handle both PNG and png extensions (case insensitive)
+            img.onerror = () => {
+                img.src = getShirtImagePath(index).replace('.png', '.PNG');
+                
+                // If PNG also fails, use placeholder
+                img.onerror = () => {
+                    console.warn(`Could not load image for day ${shirtData[index].day}`);
+                    element.style.backgroundImage = `url('${placeholderImage}')`;
+                };
+            };
+            
+            img.onload = () => {
+                element.style.backgroundImage = `url('${img.src}')`;
+            };
+        }
+
+        // Check if we need to load a different batch of shirts
+        function checkAndUpdateBatch(index) {
+            const { start, end } = getBatchRange(index);
+            const currentStart = parseInt(shirtRack.firstChild?.dataset.index || 0);
+            const currentEnd = parseInt(shirtRack.lastChild?.dataset.index || 0);
+            
+            if (index < currentStart || index > currentEnd) {
+                renderInitialItems(index);
+            }
+        }
+
+        // Show details view
+        function showShirtDetails(index) {
+            // Save current scroll positions before changing anything
+            saveScrollPositions();
+            
+            // Set a flag to prevent scroll operations
+            const wasScrolling = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            
+            currentIndex = index;
+            const data = shirtData[index];
+            
+            // Check if we need to load a different batch
+            checkAndUpdateBatch(index);
+            
+            // Update detail view
+            shirtDetail.style.backgroundImage = `url('${getShirtImagePath(index)}')`;
+            diaryText.textContent = data.description || 'No description available.';
+            
+            // Use consistent font size regardless of device or content length
+            diaryText.style.fontSize = '14px';
+            
+            currentDayEl.textContent = data.day;
+            currentDateEl.textContent = data.date;
+            
+            // Handle error for detail image
+            const detailImg = new Image();
+            detailImg.src = getShirtImagePath(index);
+            
+            detailImg.onerror = () => {
+                // Try uppercase extension if lowercase fails
+                detailImg.src = getShirtImagePath(index).replace('.png', '.PNG');
+                
+                detailImg.onerror = () => {
+                    shirtDetail.style.backgroundImage = `url('${placeholderImage}')`;
+                };
+            };
+            
+            detailImg.onload = () => {
+                shirtDetail.style.backgroundImage = `url('${detailImg.src}')`;
+            };
+            
+            // Update active link
+            updateActiveLink(index);
+            
+            // Scroll the selected shirt into view in the rack without affecting page position
+            const selectedShirt = document.querySelector(`.shirt-item[data-index="${index}"]`);
+            if (selectedShirt) {
+                // Calculate scroll position to center the shirt
+                const rackContainer = document.querySelector('.rack-container');
+                const shirtRect = selectedShirt.getBoundingClientRect();
+                const rackRect = rackContainer.getBoundingClientRect();
+                
+                if (shirtRect.left < rackRect.left || shirtRect.right > rackRect.right) {
+                    const targetScroll = (shirtRect.left - rackRect.left) - (rackRect.width / 2) + (shirtRect.width / 2);
+                    rackContainer.scrollLeft += targetScroll;
+                }
+            }
+            
+            // Re-enable scrolling
+            document.body.style.overflow = wasScrolling;
+            
+            // Restore previous scroll positions after everything is updated
+            restoreScrollPositions();
+            
+            // Check for scroll indicators
+            checkScrollIndicators();
+        }
+
+        // Create scroll indicators
+        function createScrollIndicators() {
+            // Create down indicator
+            const scrollDown = document.createElement('div');
+            scrollDown.className = 'scroll-indicator scroll-down';
+            scrollDown.innerHTML = '▼';
+            scrollDown.addEventListener('click', () => {
+                diaryText.scrollTop += 30; // Scroll down by 30px
+                checkScrollIndicators();
+            });
+            diaryEntry.appendChild(scrollDown);
+            
+            // Create up indicator
+            const scrollUp = document.createElement('div');
+            scrollUp.className = 'scroll-indicator scroll-up';
+            scrollUp.innerHTML = '▲';
+            scrollUp.addEventListener('click', () => {
+                diaryText.scrollTop -= 30; // Scroll up by 30px
+                checkScrollIndicators();
+            });
+            diaryEntry.appendChild(scrollUp);
+        }
+
+        // Check if scroll indicators should be shown
+        function checkScrollIndicators() {
+            const scrollDownIndicator = document.querySelector('.scroll-down');
+            const scrollUpIndicator = document.querySelector('.scroll-up');
+            
+            if (!scrollDownIndicator || !scrollUpIndicator) return;
+            
+            // Show down arrow if there's more content below
+            const hasMoreBelow = diaryText.scrollHeight > diaryText.clientHeight && 
+                diaryText.scrollHeight - diaryText.scrollTop - diaryText.clientHeight > 5;
+            
+            // Show up arrow if there's more content above
+            const hasMoreAbove = diaryText.scrollTop > 5;
+            
+            scrollDownIndicator.classList.toggle('visible', hasMoreBelow);
+            scrollUpIndicator.classList.toggle('visible', hasMoreAbove);
+        }
+
+        // Add scroll event listener to diary text
+        function setupScrollListeners() {
+            diaryText.addEventListener('scroll', checkScrollIndicators);
+            window.addEventListener('resize', checkScrollIndicators);
+        }
+
+        // Navigation
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default to avoid scrolling
+            navigate(-1);
+            return false;
+        });
+        
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default to avoid scrolling
+            navigate(1);
+            return false;
+        });
+
+        function navigate(direction) {
+            const newIndex = (currentIndex + direction + shirtData.length) % shirtData.length;
+            showShirtDetails(newIndex);
+        }
+
+        // Handle keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigate(-1);
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                navigate(1);
+            }
+        });
+
+        // Initialize the app
+        init();
+        
+        // Create scroll indicators
+        createScrollIndicators();
+        setupScrollListeners();
+    </script>
+</body>
+</html>
